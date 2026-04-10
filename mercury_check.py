@@ -3,26 +3,100 @@ MercuryCI Planetary Status Module
 Checks retrograde status and moon phase before allowing merges.
 """
 
-import math
-from datetime import date, datetime
+import random
+from datetime import date
 from dataclasses import dataclass
 from enum import Enum
 
 
-class MoonPhase(Enum):
-    NEW_MOON = ("🌑", "New Moon", "Fresh starts encouraged. Risky deploys discouraged.")
-    WAXING_CRESCENT = ("🌒", "Waxing Crescent", "Good energy for new features.")
-    FIRST_QUARTER = ("🌓", "First Quarter", "Build momentum. Ship incrementally.")
-    WAXING_GIBBOUS = ("🌔", "Waxing Gibbous", "Refinement phase. Good for bug fixes.")
-    FULL_MOON = ("🌕", "Full Moon", "Emotions are high. Review carefully. Maybe hydrate.")
-    WANING_GIBBOUS = ("🌖", "Waning Gibbous", "Integration and reflection. Good for docs.")
-    LAST_QUARTER = ("🌗", "Last Quarter", "Release old patterns. Refactor with intention.")
-    WANING_CRESCENT = ("🌘", "Waning Crescent", "Rest phase. Avoid major architecture decisions.")
+# Multiple guidance messages per phase — one is picked at random each run.
+PHASE_GUIDANCE: dict[str, list[str]] = {
+    "New Moon": [
+        "Fresh starts encouraged. Risky deploys discouraged.",
+        "A blank slate. Good time to open that PR you've been sitting on.",
+        "Plant seeds, not hotfixes. Intention matters right now.",
+        "The void is full of possibility. Mostly bugs, but also possibility.",
+    ],
+    "Waxing Crescent": [
+        "Good energy for new features.",
+        "Momentum is building. Push the branch.",
+        "Small steps. Commit often. The crescent rewards incrementalism.",
+        "Something is beginning. Let it be a feature and not a fire.",
+    ],
+    "First Quarter": [
+        "Build momentum. Ship incrementally.",
+        "Half the light, all the energy. A good day to merge.",
+        "Tension is productive right now. So is a thorough code review.",
+        "Obstacles are clarifying. Debug with curiosity, not frustration.",
+    ],
+    "Waxing Gibbous": [
+        "Refinement phase. Good for bug fixes.",
+        "Almost full. Polish what you have before adding more.",
+        "The code is close. Resist the urge to redesign everything.",
+        "Good time for a second pass. Fresh eyes on old PRs.",
+    ],
+    "Full Moon": [
+        "Emotions are high. Review carefully. Maybe hydrate.",
+        "Peak energy. Ideal for big merges, but double-check your work.",
+        "Everything feels urgent tonight. Most of it isn't. Breathe.",
+        "The full moon illuminates what was hidden. So does `git diff`.",
+        "High tides. High feelings. Low tolerance for flaky tests.",
+    ],
+    "Waning Gibbous": [
+        "Integration and reflection. Good for docs.",
+        "The sprint is winding down. Write the tests you skipped.",
+        "Share what you've built. Demo it. Document it. Let it breathe.",
+        "Gratitude phase. Thank your reviewers. Merge their feedback.",
+    ],
+    "Last Quarter": [
+        "Release old patterns. Refactor with intention.",
+        "What no longer serves the codebase can be deleted now.",
+        "Good energy for technical debt. The kind you actually pay off.",
+        "Let go of the branch you've been afraid to close.",
+        "The stars say: delete the dead code. You know which code.",
+    ],
+    "Waning Crescent": [
+        "Rest phase. Avoid major architecture decisions.",
+        "The cycle is ending. Draft your PRs; don't merge them yet.",
+        "Quiet time. Good for reading documentation you've been ignoring.",
+        "The cosmos are resetting. So should your local environment.",
+    ],
+}
 
-    def __init__(self, emoji, label, guidance):
+RETROGRADE_TOOLTIPS: list[str] = [
+    "Not today, bestie. Mercury direct in {days} day{s}.",
+    "Mercury is sorting through its feelings. Direct in {days} day{s}.",
+    "The messenger planet is reconsidering. Back in {days} day{s}.",
+    "Retrograde in progress. The merge can wait {days} day{s}.",
+    "Even Mercury needs to reflect sometimes. Direct in {days} day{s}.",
+    "Communications are spiritually delayed. Direct in {days} day{s}.",
+]
+
+CLEAR_TOOLTIPS: list[str] = [
+    "{emoji} Merge available. {guidance}",
+    "{emoji} Mercury is direct. {guidance}",
+    "{emoji} The planets are aligned-ish. {guidance}",
+    "{emoji} All systems nominal (cosmically speaking). {guidance}",
+]
+
+
+class MoonPhase(Enum):
+    NEW_MOON       = ("🌑", "New Moon")
+    WAXING_CRESCENT = ("🌒", "Waxing Crescent")
+    FIRST_QUARTER  = ("🌓", "First Quarter")
+    WAXING_GIBBOUS = ("🌔", "Waxing Gibbous")
+    FULL_MOON      = ("🌕", "Full Moon")
+    WANING_GIBBOUS = ("🌖", "Waning Gibbous")
+    LAST_QUARTER   = ("🌗", "Last Quarter")
+    WANING_CRESCENT = ("🌘", "Waning Crescent")
+
+    def __init__(self, emoji, label):
         self.emoji = emoji
         self.label = label
-        self.guidance = guidance
+
+    @property
+    def guidance(self) -> str:
+        return random.choice(PHASE_GUIDANCE[self.label])
 
 
 # Known Mercury retrograde periods (extend as needed)
@@ -56,12 +130,29 @@ class CosmicStatus:
     def merge_button_tooltip(self) -> str:
         if self.mercury_retrograde:
             days = self.days_until_direct
-            return f"Not today, bestie. Mercury direct in {days} day{'s' if days != 1 else ''}."
-        return f"{self.moon_phase.emoji} Merge available. {self.moon_phase.guidance}"
+            s = 's' if days != 1 else ''
+            template = random.choice(RETROGRADE_TOOLTIPS)
+            return template.format(days=days, s=s)
+        template = random.choice(CLEAR_TOOLTIPS)
+        return template.format(emoji=self.moon_phase.emoji, guidance=self.moon_phase.guidance)
 
     def slack_header(self) -> str:
         phase = self.moon_phase
-        status = "RETROGRADE ACTIVE" if self.mercury_retrograde else "All planets nominal"
+        if self.mercury_retrograde:
+            days = self.days_until_direct
+            status = random.choice([
+                "RETROGRADE ACTIVE",
+                f"Retrograde — direct in {days} day{'s' if days != 1 else ''}",
+                "Mercury is in its feelings",
+                "☿ retrograde",
+            ])
+        else:
+            status = random.choice([
+                "All planets nominal",
+                "Mercury direct ✓",
+                "Cosmically clear",
+                "No retrogrades detected",
+            ])
         return f"{phase.emoji} {phase.label} | Mercury: {status}"
 
 
