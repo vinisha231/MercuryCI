@@ -1,4 +1,4 @@
-# MercuryCI 🪐
+# MercuryCI 🪐 - April Fools Hackathon
 ### The Emotionally Aware, Astrologically Governed CI/CD Pipeline
 
 > *"Your code deserves to be seen. Your feelings deserve to be validated. Your merge deserves to wait until Mercury is direct."*
