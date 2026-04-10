@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MercuryCI Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: #1f2328;
+      background: #ffffff;
+      width: 300px;
+      padding: 16px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #d0d7de;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .cosmic-status {
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .cosmic-status .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .cosmic-status .row:last-child { margin-bottom: 0; }
+
+    .cosmic-status .label { color: #656d76; }
+
+    .retrograde-badge {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .ok-badge {
+      color: #2da44e;
+      font-weight: 600;
+    }
+
+    section { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #656d76;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    input[type="password"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      background: #fff;
+      color: #1f2328;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0969da;
+      box-shadow: 0 0 0 3px rgba(9,105,218,0.15);
+    }
+
+    .token-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .token-row input { flex: 1; }
+
+    button {
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(27,31,36,0.15);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #2da44e;
+      color: #fff;
+      border-color: rgba(27,31,36,0.15);
+    }
+
+    .btn-primary:hover { background: #2c974b; }
+
+    .btn-secondary {
+      background: #f6f8fa;
+      color: #1f2328;
+    }
+
+    .btn-secondary:hover { background: #eaeef2; }
+
+    .btn-danger {
+      background: #fff;
+      color: #cf222e;
+      border-color: #cf222e;
+    }
+
+    .btn-danger:hover { background: #fff0f0; }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .user-info .username { font-weight: 600; }
+    .user-info .sign { color: #656d76; }
+
+    #sign-section { display: none; }
+
+    .sign-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sign-or {
+      text-align: center;
+      color: #656d76;
+      font-size: 11px;
+    }
+
+    .birthdate-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .birthdate-row input {
+      width: 50%;
+      text-align: center;
+    }
+
+    #feedback {
+      font-size: 11px;
+      margin-top: 8px;
+      min-height: 16px;
+      line-height: 1.4;
+    }
+
+    #feedback.ok    { color: #2da44e; }
+    #feedback.error { color: #cf222e; }
+
+    footer {
+      border-top: 1px solid #d0d7de;
+      padding-top: 10px;
+      font-size: 11px;
+      color: #656d76;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:18px">🪐</span>
+  <h1>MercuryCI</h1>
+</header>
+
+<!-- Live cosmic status -->
+<div class="cosmic-status">
+  <div class="row">
+    <span class="label">Moon</span>
+    <span id="popup-moon">—</span>
+  </div>
+  <div class="row">
+    <span class="label">Mercury</span>
+    <span id="popup-mercury">—</span>
+  </div>
+  <div class="row" id="popup-retrograde-row" style="display:none">
+    <span class="label">Direct in</span>
+    <span id="popup-days">—</span>
+  </div>
+</div>
+
+<!-- GitHub token -->
+<section id="token-section">
+  <label for="token-input">GitHub Token</label>
+  <p class="hint">
+    Needs <code>repo</code> scope to submit reviews.
+    <a href="https://github.com/settings/tokens/new?scopes=repo&description=MercuryCI" target="_blank">Create one →</a>
+  </p>
+  <div class="token-row">
+    <input type="password" id="token-input" placeholder="ghp_…" autocomplete="off" />
+    <button class="btn-primary" id="save-token-btn">Save</button>
+  </div>
+</section>
+
+<!-- Logged-in state -->
+<section id="user-section" style="display:none">
+  <div class="user-info">
+    <span class="username" id="user-login">—</span>
+    <span class="sign" id="user-sign">—</span>
+  </div>
+  <div style="display:flex; gap:6px">
+    <button class="btn-secondary" id="change-sign-btn" style="flex:1">Change sign</button>
+    <button class="btn-danger"    id="logout-btn">Sign out</button>
+  </div>
+</section>
+
+<!-- Sign picker (shown when no sign saved or user clicks Change sign) -->
+<section id="sign-section">
+  <label>Your sun sign</label>
+  <div class="sign-options">
+    <select id="sign-select">
+      <option value="">— select your sign —</option>
+      <option>Aries</option><option>Taurus</option><option>Gemini</option>
+      <option>Cancer</option><option>Leo</option><option>Virgo</option>
+      <option>Libra</option><option>Scorpio</option><option>Sagittarius</option>
+      <option>Capricorn</option><option>Aquarius</option><option>Pisces</option>
+    </select>
+
+    <div class="sign-or">or enter your birth date</div>
+
+    <div class="birthdate-row">
+      <input type="text" id="birth-month" placeholder="Month (1–12)" maxlength="2" />
+      <input type="text" id="birth-day"   placeholder="Day (1–31)"   maxlength="2" />
+    </div>
+
+    <button class="btn-primary" id="save-sign-btn">Save sign</button>
+  </div>
+</section>
+
+<p id="feedback"></p>
+
+<footer>🌙 &nbsp;run `python settings.py` for CLI settings</footer>
+
+<script src="popup.js"></script>
+</body>
+</html>
