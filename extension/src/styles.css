@@ -1,0 +1,147 @@
+/* MercuryCI — PR sidebar panel styles */
+
+#mercuryci-panel {
+  border: 1px solid var(--color-border-default, #d0d7de);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: var(--color-canvas-subtle, #f6f8fa);
+  font-size: 12px;
+}
+
+/* Header */
+.mercuryci-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mercuryci-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-fg-default, #1f2328);
+}
+
+.mercuryci-moon {
+  font-size: 12px;
+  color: var(--color-fg-muted, #656d76);
+  cursor: default;
+}
+
+/* Retrograde banner */
+.mercuryci-retrograde-banner {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #856404;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mercuryci-retrograde-days {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Guidance text */
+.mercuryci-guidance {
+  color: var(--color-fg-muted, #656d76);
+  font-size: 11px;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+/* No-token notice */
+.mercuryci-notice {
+  font-size: 11px;
+  color: var(--color-fg-muted, #656d76);
+  margin: 0 0 10px;
+}
+
+.mercuryci-notice a {
+  color: var(--color-accent-fg, #0969da);
+  text-decoration: none;
+}
+
+.mercuryci-notice a:hover {
+  text-decoration: underline;
+}
+
+/* Button group */
+.mercuryci-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mercuryci-btn {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.mercuryci-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* LGTM — green */
+.mercuryci-btn-lgtm {
+  background: #2da44e;
+  color: #fff;
+  border-color: rgba(27,31,36,0.15);
+}
+
+.mercuryci-btn-lgtm:hover:not(:disabled) {
+  background: #2c974b;
+}
+
+/* Vibes — soft purple */
+.mercuryci-btn-vibes {
+  background: #8250df;
+  color: #fff;
+  border-color: rgba(27,31,36,0.15);
+}
+
+.mercuryci-btn-vibes:hover:not(:disabled) {
+  background: #6e40c9;
+}
+
+/* Cosmos — dark navy */
+.mercuryci-btn-cosmos {
+  background: #0d1117;
+  color: #e6edf3;
+  border-color: #30363d;
+}
+
+.mercuryci-btn-cosmos:hover:not(:disabled) {
+  background: #161b22;
+}
+
+/* Status line */
+.mercuryci-status {
+  margin: 8px 0 0;
+  font-size: 11px;
+  min-height: 16px;
+  line-height: 1.4;
+}
+
+.mercuryci-status-ok {
+  color: #2da44e;
+}
+
+.mercuryci-status-error {
+  color: #cf222e;
+}
