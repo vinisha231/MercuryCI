@@ -1,6 +1,6 @@
 """
 MercuryCI Birth Chart Parser
-Reads astrological data from GitHub profile bios.
+Reads astrological data from GitHub profile bios, saved config, or user prompt.
 
 Expected bio format:
   ☀️ Scorpio | 🌙 Cancer | ⬆️ Virgo
@@ -8,7 +8,7 @@ Expected bio format:
 """
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 ZODIAC_SIGNS = [
@@ -31,6 +31,84 @@ SIGN_COMPATIBILITY = {
 }
 
 FALLBACK_SIGN = "Libra"  # Most balanced, best default
+
+# (month, day) ranges — end date is inclusive
+BIRTHDATE_TO_SIGN = [
+    ((3, 21), (4, 19),   "Aries"),
+    ((4, 20), (5, 20),   "Taurus"),
+    ((5, 21), (6, 20),   "Gemini"),
+    ((6, 21), (7, 22),   "Cancer"),
+    ((7, 23), (8, 22),   "Leo"),
+    ((8, 23), (9, 22),   "Virgo"),
+    ((9, 23), (10, 22),  "Libra"),
+    ((10, 23), (11, 21), "Scorpio"),
+    ((11, 22), (12, 21), "Sagittarius"),
+    ((12, 22), (12, 31), "Capricorn"),
+    ((1, 1),  (1, 19),   "Capricorn"),
+    ((1, 20), (2, 18),   "Aquarius"),
+    ((2, 19), (3, 20),   "Pisces"),
+]
+
+
+def birthdate_to_sign(month: int, day: int) -> str:
+    """Converts a birth month and day to a sun sign."""
+    for (start_m, start_d), (end_m, end_d), sign in BIRTHDATE_TO_SIGN:
+        in_range = (
+            (month == start_m and day >= start_d) or
+            (month == end_m and day <= end_d) or
+            (start_m < month < end_m)
+        )
+        if in_range:
+            return sign
+    return FALLBACK_SIGN
+
+
+def prompt_for_sign(username: str) -> "BirthChart":
+    """
+    Interactively prompts the user to enter their sign or birth date.
+    Saves the result to config so they're never asked again.
+    """
+    from config import save_user_profile, UserProfile
+
+    print(f"\n  MercuryCI couldn't find a zodiac sign for @{username}.")
+    print("  The pipeline needs this to function at full cosmic capacity.\n")
+    print("  How would you like to provide it?")
+    print("  1. Enter my sun sign directly")
+    print("  2. Enter my birth month and day")
+    print("  3. Skip for now (defaults to Libra)\n")
+
+    choice = input("  Choice: ").strip()
+
+    if choice == "1":
+        print(f"\n  Signs: {', '.join(ZODIAC_SIGNS)}")
+        raw = input("  Sun sign: ").strip().capitalize()
+        if raw in ZODIAC_SIGNS:
+            profile = UserProfile(sun_sign=raw, source="manual")
+            save_user_profile(username, profile)
+            print(f"\n  Got it. @{username} is a {raw}. Saved to ~/.mercuryci/config.json")
+            print("  To change this later, run: python settings.py\n")
+            return BirthChart(sun_sign=raw)
+        else:
+            print(f"  '{raw}' isn't recognised. Defaulting to Libra.\n")
+            return BirthChart()
+
+    elif choice == "2":
+        try:
+            month = int(input("  Birth month (1-12): ").strip())
+            day   = int(input("  Birth day (1-31):   ").strip())
+            sign  = birthdate_to_sign(month, day)
+            profile = UserProfile(sun_sign=sign, source="birthdate")
+            save_user_profile(username, profile)
+            print(f"\n  {month}/{day} → {sign}. Saved to ~/.mercuryci/config.json")
+            print("  To change this later, run: python settings.py\n")
+            return BirthChart(sun_sign=sign)
+        except ValueError:
+            print("  Couldn't parse that. Defaulting to Libra.\n")
+            return BirthChart()
+
+    else:
+        print("  Defaulting to Libra. Run `python settings.py` whenever you're ready.\n")
+        return BirthChart()
 
 
 @dataclass
@@ -122,26 +200,51 @@ def parse_birth_chart_from_bio(bio: str) -> BirthChart:
     )
 
 
-def fetch_chart_from_github(username: str, github_token: str | None = None) -> BirthChart:
+def fetch_chart_from_github(
+    username: str,
+    github_token: str | None = None,
+    interactive: bool = False,
+) -> BirthChart:
     """
-    Fetches a GitHub user's bio and parses their birth chart from it.
-    Requires the GitHub API. Fails gracefully to Libra.
+    Resolves a birth chart for a GitHub user using this priority order:
+      1. Saved config (~/.mercuryci/config.json)
+      2. GitHub profile bio
+      3. Interactive prompt (if interactive=True), otherwise defaults to Libra
     """
+    from config import get_user_profile, UserProfile
+
+    # 1. Check saved config
+    saved = get_user_profile(username)
+    if saved:
+        return BirthChart(
+            sun_sign=saved.sun_sign,
+            moon_sign=saved.moon_sign,
+            rising_sign=saved.rising_sign,
+        )
+
+    # 2. Try GitHub bio
+    bio = ""
     try:
         import urllib.request, json
         url = f"https://api.github.com/users/{username}"
         headers = {"User-Agent": "MercuryCI/1.0"}
         if github_token:
             headers["Authorization"] = f"Bearer {github_token}"
-
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=5) as resp:
-            data = json.loads(resp.read())
-            bio = data.get("bio") or ""
-            chart = parse_birth_chart_from_bio(bio)
-            if chart.sun_sign == FALLBACK_SIGN and not bio:
-                print(f"  [MercuryCI] No birth chart found in @{username}'s bio. Defaulting to Libra rising.")
-            return chart
+            bio = json.loads(resp.read()).get("bio") or ""
     except Exception as e:
-        print(f"  [MercuryCI] Could not fetch chart for @{username}: {e}. Defaulting to Libra.")
-        return BirthChart()
+        print(f"  [MercuryCI] Could not reach GitHub API for @{username}: {e}")
+
+    if bio:
+        chart = parse_birth_chart_from_bio(bio)
+        if chart.sun_sign != FALLBACK_SIGN:
+            return chart
+
+    # 3. Prompt or fall back
+    if interactive:
+        return prompt_for_sign(username)
+
+    print(f"  [MercuryCI] No sign found for @{username}. Defaulting to Libra.")
+    print(f"  Run `python settings.py --user {username}` to set your sign.\n")
+    return BirthChart()

@@ -104,13 +104,52 @@ MERCURYCI_EMPATHY_LEVEL=high                 # low | medium | high | scorpio
 
 ---
 
+## How your sign is resolved
+
+MercuryCI uses this priority order to find your sign:
+
+1. **Saved config** — `~/.mercuryci/config.json` (fastest, set once)
+2. **GitHub bio** — parsed automatically if it contains a zodiac sign
+3. **Interactive prompt** — if neither of the above works, you'll be asked on first run
+
+The prompt lets you enter either your **sun sign directly** or your **birth month and day** (MercuryCI converts the date to a sign automatically).
+
+```
+MercuryCI couldn't find a zodiac sign for @you.
+The pipeline needs this to function at full cosmic capacity.
+
+How would you like to provide it?
+1. Enter my sun sign directly
+2. Enter my birth month and day
+3. Skip for now (defaults to Libra)
+```
+
+Your answer is saved to `~/.mercuryci/config.json` so you're never asked again.
+
+### Changing your sign later
+
+```bash
+python settings.py              # uses your current gh auth account
+python settings.py --user ruby  # for a specific username
+```
+
+Settings menu options:
+- View current profile
+- Set sign manually
+- Set sign by birth date
+- Clear saved profile
+
+---
+
 ## Architecture
 
 ```
 mercuryci/
 ├── empathy_compiler.py     # Wraps stderr with emotional intelligence
 ├── mercury_check.py        # Retrograde detection + moon phase
-├── birth_chart.py          # Parses GitHub bio for astrological data
+├── birth_chart.py          # Sign resolution: config → bio → prompt
+├── config.py               # Reads/writes ~/.mercuryci/config.json
+├── settings.py             # Interactive settings menu
 ├── slack_notifier.py       # Posts cosmic CI updates to Slack
 ├── review_buttons.py       # Injects custom PR approval UI
 └── .github/
@@ -123,7 +162,10 @@ mercuryci/
 ## FAQ
 
 **Q: What if my birth chart isn't in my GitHub bio?**
-A: The pipeline defaults to Libra rising. We've found this creates the most balanced builds.
+A: You'll be prompted on first run to enter your sign or birth date. It saves to `~/.mercuryci/config.json` and never asks again.
+
+**Q: Can I change my sign later?**
+A: Yes. Run `python settings.py` for the full settings menu.
 
 **Q: Can I force-merge during retrograde?**
 A: You can. The button will say "Override the Cosmos." The pipeline will remember.
