@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "MercuryCI",
+  "version": "1.0.0",
+  "description": "Emotionally aware, astrologically governed code review buttons for GitHub.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://api.github.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/pull/*"],
+      "js": [
+        "src/cosmic.js",
+        "src/github_api.js",
+        "src/content.js"
+      ],
+      "css": ["src/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "MercuryCI Settings"
+  },
+  "background": {
+    "service_worker": "src/background.js"
+  }
+}
