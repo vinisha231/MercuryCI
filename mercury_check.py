@@ -208,3 +208,4 @@ if __name__ == "__main__":
     status = get_cosmic_status()
     print(status.slack_header())
     print(f"Merge tooltip: {status.merge_button_tooltip()}")
+    print(f"Guidance: {status.moon_phase.guidance}")
