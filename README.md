@@ -141,6 +141,50 @@ Settings menu options:
 
 ---
 
+## Browser Extension
+
+The extension makes the review buttons real — injected directly into the GitHub PR sidebar.
+
+### Install (Chrome / Edge)
+
+1. Go to `chrome://extensions` and enable **Developer mode**
+2. Click **Load unpacked** and select the `extension/` folder
+3. Click the 🪐 icon in your toolbar
+4. Paste a GitHub token with `repo` scope ([create one here](https://github.com/settings/tokens/new?scopes=repo&description=MercuryCI))
+5. Enter your sun sign or birth date — saved locally, never leaves your browser
+
+### What the extension does
+
+On any GitHub PR page, a **MercuryCI panel** appears in the right sidebar showing:
+- Current moon phase + guidance
+- Mercury retrograde countdown (if active)
+- Three review buttons that call the GitHub API directly:
+
+| Button | GitHub review event |
+|--------|-------------------|
+| ✅ LGTM | `APPROVE` |
+| 🌙 The vibes are right | `APPROVE` with cosmic note |
+| 🪐 I defer to the cosmos | `APPROVE` or `REQUEST_CHANGES` — decided by moon phase weighted RNG |
+
+"Defer to cosmos" weights: Full Moon = 70% approve, retrograde = −15% penalty.
+
+### Extension files
+
+```
+extension/
+├── manifest.json           # Manifest V3, targets github.com/*/pull/*
+└── src/
+    ├── cosmic.js           # Moon phase + retrograde logic (pure JS)
+    ├── github_api.js       # GitHub REST API wrapper
+    ├── content.js          # Injects panel into PR sidebar
+    ├── styles.css          # Panel + button styles
+    ├── popup.html          # Settings popup UI
+    ├── popup.js            # Token auth, sign picker, birthdate → sign
+    └── background.js       # Service worker, re-injects on install
+```
+
+---
+
 ## Architecture
 
 ```
@@ -149,12 +193,13 @@ mercuryci/
 ├── mercury_check.py        # Retrograde detection + moon phase
 ├── birth_chart.py          # Sign resolution: config → bio → prompt
 ├── config.py               # Reads/writes ~/.mercuryci/config.json
-├── settings.py             # Interactive settings menu
+├── settings.py             # Interactive settings menu (CLI)
 ├── slack_notifier.py       # Posts cosmic CI updates to Slack
-├── review_buttons.py       # Injects custom PR approval UI
+├── review_buttons.py       # Review logic (used by extension + pipeline)
+├── extension/              # Chrome/Edge browser extension
 └── .github/
     └── workflows/
-        └── mercuryci.yml   # The pipeline itself
+        └── mercuryci.yml   # The CI/CD pipeline
 ```
 
 ---
