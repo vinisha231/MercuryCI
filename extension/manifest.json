@@ -3,7 +3,7 @@
   "name": "MercuryCI",
   "version": "1.0.0",
   "description": "Emotionally aware, astrologically governed code review buttons for GitHub.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "host_permissions": [
     "https://github.com/*",
     "https://api.github.com/*"
